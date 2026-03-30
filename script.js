@@ -1,120 +1,173 @@
-const JSON_URL = "https://script.google.com/macros/s/AKfycbz9AWk4aUrtfEiddayYkggV1fQfICLiCP-i4sD7aR5l817IQGLZ1NwgyCemkfHdpZdOTA/exec";
+* {
+  box-sizing: border-box;
+}
 
-async function loadProducts() {
-  try {
-    const response = await fetch(JSON_URL);
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+html, body {
+  margin: 0;
+  padding: 0;
+}
 
-    const products = await response.json();
-    const productList = document.getElementById("product-list");
-    if (!productList) return;
+body {
+  font-family: Arial, "Noto Sans TC", sans-serif;
+  background: #0f0f0f;
+  color: #f5f5f5;
+  line-height: 1.8;
+}
 
-    productList.innerHTML = "";
+a {
+  color: inherit;
+}
 
-    if (!products || products.length === 0) {
-      productList.innerHTML = `<div class="empty-state">目前尚無商品資料</div>`;
-      return;
-    }
+.site-header {
+  border-bottom: 1px solid #262626;
+  background: #111;
+}
 
-    products.forEach((product) => {
-      const firstImage = product.images && product.images.length > 0 ? product.images[0] : "";
-      const firstImageThumb = firstImage
-        ? `/cdn-cgi/image/width=420,quality=75,format=auto/${firstImage}`
-        : "";
+.site-header-inner {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 18px 16px;
+}
 
-      const card = document.createElement("a");
-      card.className = "product-card";
-      card.href = `detail.html?id=${encodeURIComponent(product.id)}`;
+.site-header h1 {
+  margin: 0;
+  font-size: 24px;
+  letter-spacing: 1px;
+}
 
-      card.innerHTML = `
-        <div class="product-image-wrap">
-          ${firstImageThumb ? `<img src="${firstImageThumb}" alt="${escapeHtml(product.name)}" loading="lazy">` : `<div class="no-image">暫無圖片</div>`}
-        </div>
-        <div class="product-info">
-          <div class="product-name">${escapeHtml(product.name)}</div>
-          <div class="product-id">編號：${escapeHtml(product.id)}</div>
-        </div>
-      `;
+.back-link {
+  display: inline-block;
+  margin-bottom: 10px;
+  color: #cfcfcf;
+  text-decoration: none;
+  font-size: 14px;
+}
 
-      const img = card.querySelector("img");
-      if (img) {
-        img.onerror = function () {
-          this.remove();
-          const wrap = card.querySelector(".product-image-wrap");
-          if (wrap) {
-            wrap.innerHTML = `<div class="no-image">暫無圖片</div>`;
-          }
-        };
-      }
+.container {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 24px 16px 40px;
+}
 
-      productList.appendChild(card);
-    });
-  } catch (error) {
-    console.error(error);
-    const productList = document.getElementById("product-list");
-    if (productList) {
-      productList.innerHTML = `<div class="empty-state">商品資料載入失敗</div>`;
-    }
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.product-card {
+  display: block;
+  text-decoration: none;
+  background: #181818;
+  border: 1px solid #292929;
+  border-radius: 14px;
+  overflow: hidden;
+  transition: transform 0.18s ease, border-color 0.18s ease;
+}
+
+.product-card:hover {
+  transform: translateY(-2px);
+  border-color: #444;
+}
+
+.product-image-wrap {
+  aspect-ratio: 1 / 1;
+  background: #1f1f1f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.product-image-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.product-info {
+  padding: 14px;
+}
+
+.product-name {
+  font-size: 16px;
+  line-height: 1.55;
+  margin-bottom: 8px;
+}
+
+.product-id {
+  font-size: 13px;
+  color: #b8b8b8;
+}
+
+.detail-page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 480px);
+  gap: 28px;
+  align-items: start;
+}
+
+.detail-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.detail-image-item {
+  background: #181818;
+  border: 1px solid #292929;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.detail-image-item img {
+  width: 100%;
+  display: block;
+}
+
+.detail-content {
+  background: #181818;
+  border: 1px solid #292929;
+  border-radius: 14px;
+  padding: 20px;
+}
+
+.detail-title {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 28px;
+  line-height: 1.45;
+}
+
+.detail-id {
+  margin-bottom: 18px;
+  color: #b8b8b8;
+  font-size: 14px;
+}
+
+.detail-desc {
+  font-size: 15px;
+  color: #f1f1f1;
+  word-break: break-word;
+}
+
+.no-image,
+.empty-state {
+  color: #9e9e9e;
+  text-align: center;
+  padding: 36px 20px;
+}
+
+@media (max-width: 960px) {
+  .detail-page {
+    grid-template-columns: 1fr;
   }
-}
 
-async function loadProductDetail() {
-  try {
-    const params = new URLSearchParams(window.location.search);
-    const productId = params.get("id");
-    const container = document.getElementById("product-detail");
-
-    if (!container) return;
-
-    if (!productId) {
-      container.innerHTML = `<div class="empty-state">找不到商品編號</div>`;
-      return;
-    }
-
-    const response = await fetch(JSON_URL);
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-    const products = await response.json();
-    const product = products.find(item => item.id === productId);
-
-    if (!product) {
-      container.innerHTML = `<div class="empty-state">找不到商品資料</div>`;
-      return;
-    }
-
-    const imagesHtml = (product.images || []).map(src => {
-      const thumb = `/cdn-cgi/image/width=900,quality=80,format=auto/${src}`;
-      return `<img src="${thumb}" alt="${escapeHtml(product.name)}" loading="lazy" onerror="this.remove()">`;
-    }).join("");
-
-    container.innerHTML = `
-      <div class="detail-gallery">
-        ${imagesHtml || `<div class="no-image">暫無圖片</div>`}
-      </div>
-      <div class="detail-content">
-        <h1>${escapeHtml(product.name)}</h1>
-        <div class="detail-id">編號：${escapeHtml(product.id)}</div>
-        <div class="detail-desc">${formatDescription(product.desc)}</div>
-      </div>
-    `;
-  } catch (error) {
-    console.error(error);
-    const container = document.getElementById("product-detail");
-    if (container) {
-      container.innerHTML = `<div class="empty-state">商品資料載入失敗</div>`;
-    }
+  .detail-content {
+    padding: 18px;
   }
-}
 
-function formatDescription(text) {
-  return String(text || "").replace(/\n/g, "<br>");
-}
-
-function escapeHtml(str) {
-  return String(str || "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
+  .detail-title {
+    font-size: 24px;
+  }
 }
