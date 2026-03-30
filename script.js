@@ -18,6 +18,9 @@ async function loadProducts() {
 
     products.forEach((product) => {
       const firstImage = product.images && product.images.length > 0 ? product.images[0] : "";
+      const firstImageThumb = firstImage
+        ? `/cdn-cgi/image/width=420,quality=75,format=auto/${firstImage}`
+        : "";
 
       const card = document.createElement("a");
       card.className = "product-card";
@@ -25,7 +28,7 @@ async function loadProducts() {
 
       card.innerHTML = `
         <div class="product-image-wrap">
-          ${firstImage ? `<img src="${firstImage}" alt="${escapeHtml(product.name)}" loading="lazy">` : `<div class="no-image">暫無圖片</div>`}
+          ${firstImageThumb ? `<img src="${firstImageThumb}" alt="${escapeHtml(product.name)}" loading="lazy">` : `<div class="no-image">暫無圖片</div>`}
         </div>
         <div class="product-info">
           <div class="product-name">${escapeHtml(product.name)}</div>
@@ -62,6 +65,7 @@ async function loadProductDetail() {
     const container = document.getElementById("product-detail");
 
     if (!container) return;
+
     if (!productId) {
       container.innerHTML = `<div class="empty-state">找不到商品編號</div>`;
       return;
@@ -78,9 +82,10 @@ async function loadProductDetail() {
       return;
     }
 
-    const imagesHtml = (product.images || []).map(src =>
-      `<img src="${src}" alt="${escapeHtml(product.name)}" loading="lazy" onerror="this.remove()">`
-    ).join("");
+    const imagesHtml = (product.images || []).map(src => {
+      const thumb = `/cdn-cgi/image/width=900,quality=80,format=auto/${src}`;
+      return `<img src="${thumb}" alt="${escapeHtml(product.name)}" loading="lazy" onerror="this.remove()">`;
+    }).join("");
 
     container.innerHTML = `
       <div class="detail-gallery">
